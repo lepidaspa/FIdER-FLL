@@ -139,23 +139,26 @@ def validateFieldAsTimeSpan (fielddata):
 	return True
 
 def validateFieldAsBoundingBox (fielddata):
-	#Bounding box definition: collection of 2 arrays of COORD_AXES (see constants) coordinates each as int values, direction S-N / W-E
+	#Bounding box definition: array of 2*COORD_AXES_MODEL values (see constants) coordinates each as float values, direction S-N / W-E
 
 	#1. Checking if value is a collection of 2 arrays
-	if isinstance(fielddata, list) and len(fielddata)==2:
-		#2. Checking if each array is made of 2 elements
-		for coords in fielddata:
-			if isinstance(coords, list) and len(coords)==COORD_AXES:
-				#3. Checking if each element in the coords array is an int
-				for coord in coords:
-					if not (isinstance(coord, float)):
-						return False
-		#4. Checking if the relative position of the points in the bounding box is consistent
-		if fielddata[0][0] <= fielddata[1][0] and fielddata[0][1] <= fielddata[1][1]:
-			return True
+	if not (isinstance(fielddata, list) and len(fielddata)==2*COORD_AXES_MODEL):
+		return False
 
-	# Failed at least one check
-	return False
+	#2. Checking if each element in the coords array is of the correct type
+	for coord in coords:
+		if not (isinstance(coord, float)):
+			return False
+
+	#3. Checking if the relative position of the points in the bounding box is consistent. Note that we this is 2D only
+	#IMPORTANT NOTE: will NOT work if passing through the opposite Prime Meridian
+	for axis in range(0,2):
+		if not fielddata[axis] <= fielddata[COORD_AXES_MODEL+axis]:
+			return False
+
+	#All checks passed
+	return True
+
 
 
 def validateFieldAsMetadataListing (fielddata):
