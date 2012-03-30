@@ -10,6 +10,7 @@ FIELDNAME_DISCOVERY_TIMESPAN = 'time'
 FIELDNAME_DISCOVERY_METADATA = 'metadata'
 
 FIELDNAME_GEOJSON_COORDINATES = 'coordinates'
+<<<<<<< HEAD
 FIELDNAME_GEOJSON_BBOX = 'bbox'
 FIELDNAME_GEOJSON_CRS = 'crs'
 FIELDNAME_GEOJSON_OBJECTTYPE = 'type'
@@ -32,3 +33,9 @@ TYPES_GEOJSON_GEOMETRY = ("Point", "MultiPoint", "LineString", "MultiLineString"
 # COORD_AXES_MODEL is the number of axes we expect to find in the GeoJSON data, COORD_AXES_COMPARE is the number of axes we will use for validating positions
 COORD_AXES_MODEL = 3
 COORD_AXES_COMPARE = 2
+=======
+
+#The number of axes we use as coordinates for each point on the map
+#should be 2 minimum, 3 maximum
+COORD_AXES = 2
+>>>>>>> 00e8c9a1e66057dda8996bebf46019e22751c778
