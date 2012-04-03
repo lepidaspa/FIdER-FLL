@@ -1,16 +1,27 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from validate import validateDictToTemplate
+import validation_templates
+
+__author__ = 'Antonio Vaccarino'
+__docformat__ = 'restructuredtext en'
+
 import httplib
 import re
-import string
 import urlparse
 import datetime
 
 
 from constants import *
 
-__author__ = 'Antonio Vaccarino'
 
 def validateFieldAsIsoDateTime (isostring):
-	#Validates a ISO8601 datetime string with time zone, first by checking the notation and then the values
+	"""
+	Validates a generic string as ISO8601 datetime string with time zone, first by checking the notation and then the fields values
+
+	:param isostring: candidate ISO8601 string
+	:return: bool
+	"""
 
 	#If the string is not well formed, stop now
 	if validateFieldAsIsoDateTimeNotation(isostring) in (False, None):
@@ -83,16 +94,24 @@ def validateFieldAsIsoDateTime (isostring):
 		return False
 
 	#All checks passed, date time and timezone are valid
+
 	return True
 
 
 def validateServerToken (tokenstring):
 	#TODO: verify if this can be implemented during validation or if there is not enough rules to check it without the actual tokens list
+	if not isinstance(tokenstring, str):
+		return False
+
 	return True
 
 
 def validateFieldAsIsoDateTimeNotation (datestring):
-	#This function parses a mostly generic ISO8601 date string with timezone
+	"""Validates the format of a generic string as campatible with the structure of an ISO 8601 datetime string. Values are not cheked
+
+	:param datestring: str
+	:return: bool
+	"""
 
 	regex_string = r"[\+\-]{0,1}(\d{8}|\d{4}-\d{2}-\d{2})T\d{2}(:{0,1}\d{2}){0,2}(Z|([\+\-]{1}\d{2}(:{0,1}\d{2})))"
 
@@ -127,8 +146,13 @@ def validateFieldAsActiveUrl (fielddata):
 
 
 def validateFieldAsTimeSpan (fielddata):
-	#TimeSpan definition: list with two datetime + timezone strings
-	#TODO: actual date parsing to that we can verify the timespan is realistic? (e.g. element 1 BEFORE element2)
+	"""Validates a field as timespan data, defined as: list with two datetime + timezone strings
+
+	:param fielddata:
+	:return:
+	"""
+
+
 
 	if not (isinstance(fielddata, list) and len(fielddata)==2):
 		return False
@@ -139,7 +163,6 @@ def validateFieldAsTimeSpan (fielddata):
 	return True
 
 def validateFieldAsBoundingBox (fielddata):
-<<<<<<< HEAD
 	#Bounding box definition: array of 2*COORD_AXES_MODEL values (see constants) coordinates each as float values, direction S-N / W-E
 
 	#1. Checking if value is a collection of 2 arrays
@@ -147,38 +170,19 @@ def validateFieldAsBoundingBox (fielddata):
 		return False
 
 	#2. Checking if each element in the coords array is of the correct type
-	for coord in coords:
+	for coord in fielddata:
 		if not (isinstance(coord, float)):
 			return False
 
-	#3. Checking if the relative position of the points in the bounding box is consistent. Note that we this is 2D only
+	#3. Checking if the relative position of the points in the bounding box is consistent (or corner 1 coordinates < same coordinates on corner 2)
 	#IMPORTANT NOTE: will NOT work if passing through the opposite Prime Meridian
-	for axis in range(0,2):
+	for axis in range(0,COORD_AXES_COMPARE):
 		if not fielddata[axis] <= fielddata[COORD_AXES_MODEL+axis]:
 			return False
 
 	#All checks passed
 	return True
 
-=======
-	#Bounding box definition: collection of 2 arrays of COORD_AXES (see constants) coordinates each as int values, direction S-N / W-E
-
-	#1. Checking if value is a collection of 2 arrays
-	if isinstance(fielddata, list) and len(fielddata)==2:
-		#2. Checking if each array is made of 2 elements
-		for coords in fielddata:
-			if isinstance(coords, list) and len(coords)==COORD_AXES:
-				#3. Checking if each element in the coords array is an int
-				for coord in coords:
-					if not (isinstance(coord, float)):
-						return False
-		#4. Checking if the relative position of the points in the bounding box is consistent
-		if fielddata[0][0] <= fielddata[1][0] and fielddata[0][1] <= fielddata[1][1]:
-			return True
-
-	# Failed at least one check
-	return False
->>>>>>> 00e8c9a1e66057dda8996bebf46019e22751c778
 
 
 def validateFieldAsMetadataListing (fielddata):
@@ -224,3 +228,9 @@ def validateFieldAsDataIds (fielddata):
 	#TODO: check if IDs are numeric only or alphanumeric and implement
 	return True
 
+def validateFieldAsAnomaly (fielddata):
+
+	if not validateDictToTemplate(fielddata, validation_templates.template_anomaly) and validateFieldAsBoundingBox(fielddata['BB']):
+		return False
+
+	return True

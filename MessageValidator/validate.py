@@ -1,27 +1,35 @@
-import json
-
-
-from errors_msg import *
-from validate_fields import *
-import validation_templates
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from error_handlers import ValidationError
 
 __author__ = 'Antonio Vaccarino'
+__docformat__ = 'restructuredtext en'
+
+import json
+
+from errors_msg import *
+
 
 def validateDictToTemplate (candidate, template):
+	"""
+	This function checks (recursively) that two dicts have the same structure and that the candidate respects a series of constraints defined by the template as either a specific type for the value OR as a specific range of possible values.
 
-	#This function checks (recursively) that two dicts have exactly the same structure and that the candidate respects a series of constraints defined by the template as either a specific type for the value OR as a specific range of possible values
-	#The function returns a simple True or False value, and stops at the first error encountered
+	:param candidate: a generic dictionary object
+	:param template: a reference dictionary
+	:return: boolean
+	"""
 
 	#STEP 1: check if we have the same number of key/value couples at the current level
 	if not (isinstance(candidate, dict) and candidate.keys() == template.keys()):
 		return False
+
 
 	#STEP 2: validate the values of each key/value couple according to granularity in the template
 	for key in template:
 
 		constraint = template[key]
 
-		if not isinstance (constraint, list):
+		if isinstance (constraint, list):
 			#2.1: validate against values range
 			if candidate[key] in constraint:
 				return False
@@ -37,8 +45,15 @@ def validateDictToTemplate (candidate, template):
 	return True
 
 def validateDictToTemplateAndLog (candidate, template, sequence="/"):
-	#This function checks (recursively) that two dicts have the same structure and that the candidate respects a series of constraints defined by the template as either a specific type for the value OR as a specific range of possible values.
-	#The function returns a tuple with True/False and a list of the errors encountered in the comparison. Based on the validateDictToTemplate function
+	"""This function checks (recursively) that two dicts have the same structure and that the candidate respects a series of constraints defined by the template as either a specific type for the value OR as a specific range of possible values. Based on the validateDictToTemplate function
+	#The function returns a tuple with True/False and a list of the errors encountered in the comparison or the dict data.
+
+	:param candidate: candidate dict
+	:param template: template dict against which the candidate is validated
+	:param sequence: key sequence for breadcrumb reporting (set automatically)
+	:return: tuple with True/False validation result and validated dict/errors list
+	"""
+
 
 	validation_errors = []
 
@@ -72,46 +87,42 @@ def validateDictToTemplateAndLog (candidate, template, sequence="/"):
 	if len(validation_errors) > 0:
 		return False, validation_errors
 	else:
-		return True
-
-def validateJsonToTemplate (jsonmessage, template):
-
-	#This function checks that a json message has the same structure as a reference dictionary and that the json message respects a series of constraints defined by the template as either a specific type for the value OR as a specific range of possible values.
-	#This function returns a tuple with two values: the True/False result and the parsed json or the errors list
-
-	# Parsing the json message into a dict
-	try:
-		candidate = json.loads(jsonmessage)
-	except Exception as current_error:
-		return False, ("Not a JSON object? %s " % current_error.message)
-
-	dictionary_validation = validateDictToTemplateAndLog(candidate, template)
-	if dictionary_validation is not True:
-		return False, dictionary_validation[1]
-	else:
 		return True, candidate
 
+def parseJsonMessage (jsonmessage):
+	"""
+	Validates and parses a json message into a Python dict
+	:param jsonmessage: str, stringified json message
+	:return: dict
+	"""
 
-def validateMessageDiscovery (jsonmessage):
+	try:
+		jsondata = json.loads(jsonmessage)
+	except Exception as current_error:
+		#NOTE: in this case we put the error message from the original
+		raise ValidationError (ERROR_JSON_PARSING+"\n"+current_error.message, jsonmessage)
 
-	# General comparison of the dictionary structure,
-	# we don't continue checking if this does not work because fields may be missing
-	templatevalidation = validateJsonToTemplate(jsonmessage, validation_templates.template_response_capabilities)
+	return jsondata
 
-	if templatevalidation[0] is not True:
-		return templatevalidation
+
+def validateJsonToTemplate (jsonmessage, template):
+	"""Checks that a json message has the same structure as a reference dictionary and that the json message respects a series of constraints defined by the template as either a specific type for the value OR as a specific range of possible values.
+	Returns a tuple with two values: the True/False result and the parsed json or the errors list
+
+	:param jsonmessage: stringified json data, not yet in python dict form
+	:param template:
+	:return: tuple (bool, validation result/parsed message)
+	"""
+
+
+	# Parsing the json message into a dict
+
+	candidate = parseJsonMessage(jsonmessage)
+
+	validated, data = validateDictToTemplateAndLog(candidate, template)
+	if not validated:
+		return False, data
 	else:
-		messagedata = templatevalidation[1]
+		return True, data
 
-	validation_errors = []
-	if not validateFieldAsActiveUrl(messagedata[FIELDNAME_DISCOVERY_URL]):
-		validation_errors.append ("Field %s is not a working URL" % FIELDNAME_DISCOVERY_URL)
-	if not validateFieldAsTimeSpan(messagedata[FIELDNAME_DISCOVERY_TIMESPAN]):
-		validation_errors.append ("Field %s is not a valid timespan" % FIELDNAME_DISCOVERY_TIMESPAN)
-	if not validateFieldAsBoundingBox(messagedata[FIELDNAME_DISCOVERY_BBOX]):
-		validation_errors.append("Field %s is not a valid bounding box" % FIELDNAME_DISCOVERY_BBOX)
 
-	if len(validation_errors) > 0:
-		return False, validation_errors
-	else:
-		return True
