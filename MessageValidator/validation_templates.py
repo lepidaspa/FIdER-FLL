@@ -7,20 +7,20 @@ __docformat__ = 'restructuredtext en'
 
 
 template_response_capabilities = {
-	"token": str,
-	"message_type": ['response',],
-	"message_format": ['capabilities',],
-	"base_url": str,
+	"token": unicode,
+	"message_type": [u'response',],
+	"message_format": [u'capabilities',],
+	"base_url": unicode,
 	"area": list,
 	"time": list,
 	"operations": {
-		"write": ["full", "sync", "none"],
-		"read": ["full", "diff", "none"],
+		"write": [u"full", u"sync", u"none"],
+		"read": [u"full", u"diff", u"none"],
 		"query": {
-			"inventory": ["full", "simple", "none"],
-			"geographic": ["full", "BB", "none"],
-			"time": ["full", "none"],
-			"bi": ["full", "simple", "none"]
+			"inventory": [u"full", u"simple", u"none"],
+			"geographic": [u"full", u"BB", u"none"],
+			"time": [u"full", u"none"],
+			"bi": [u"full", u"simple", u"none"]
 		},
 		"signs": bool,
 		"metadata": list
@@ -28,10 +28,10 @@ template_response_capabilities = {
 }
 
 template_response_read = {
-	"token": str,
-	"message_type": ['response',],
-	"message_format": ['read',],
-	"operation": ['full', 'diff', 'none'],
+	"token": unicode,
+	"message_type": [u'response',],
+	"message_format": [u'read',],
+	"operation": [u'full', u'diff', u'none'],
 	"data": {
 		"upsert": list,
 		"delete": list
@@ -39,9 +39,9 @@ template_response_read = {
 }
 
 template_request_write = {
-	"token": str,
-	"message_type": ['request',],
-	"message_format": ['write,'],
+	"token": unicode,
+	"message_type": [u'request',],
+	"message_format": [u'write,'],
 	"data": {
 		"upsert": list,
 		"delete": list
@@ -49,28 +49,28 @@ template_request_write = {
 }
 
 template_response_welcome = {
-	"token": str,
-	"message_type": ['response',],
-	"message_format": ['welcome,'],
-	"latest_model_version": str,
+	"token": unicode,
+	"message_type": [u'response',],
+	"message_format": [u'welcome,'],
+	"latest_model_version": unicode,
 }
 
 template_request_query = {
-	"token": str,
-	"message_type": ['request',],
-	"message_format": ['query,'],
+	"token": unicode,
+	"message_type": [u'request',],
+	"message_format": [u'query,'],
 	"query" : {
 		"BB": list,
 		"inventory": dict,
-		"time": str,
+		"time": unicode,
 		"signed": bool
 	},
 }
 
 template_response_write = {
-	"token": str,
-	"message_type": ['response',],
-	"message_format": ['write',],
+	"token": unicode,
+	"message_type": [u'response',],
+	"message_format": [u'write',],
 	"acknowledge": {
 		"upsert": list,
 		"delete": list
@@ -79,34 +79,34 @@ template_response_write = {
 }
 
 template_error_anomaly = {
-	"token": str,
-	"message_type": ['error',],
-	"message_format": ['anomaly',],
+	"token": unicode,
+	"message_type": [u'error',],
+	"message_format": [u'anomaly',],
 	"anomalies": list
 }
 
 template_anomaly = {
-	"id": str,
-	"anomaly": str,
+	"id": unicode,
+	"anomaly": unicode,
 	"BB": list
 }
 
 template_error_error = {
-	"token": str,
-	"message_type": ['error',],
-	"message_format": ['error',],
-	"error_message": str,
-	"error_code": str
+	"token": unicode,
+	"message_type": [u'error',],
+	"message_format": [u'error',],
+	"error_message": unicode,
+	"error_code": unicode
 }
 
 template_request_api = {
-	"token": str,
-	"message_type": ['request',],
-	"message_format": ['query,'],
+	"token": unicode,
+	"message_type": [u'request',],
+	"message_format": [u'query,'],
 	"query" : {
 		"BB": list,
-		"time": str,
-		"sign": str
+		"time": unicode,
+		"sign": unicode
 	},
-	"key": str,
+	"key": unicode,
 }

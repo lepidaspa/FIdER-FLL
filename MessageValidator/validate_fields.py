@@ -100,7 +100,7 @@ def validateFieldAsIsoDateTime (isostring):
 
 def validateServerToken (tokenstring):
 	#TODO: verify if this can be implemented during validation or if there is not enough rules to check it without the actual tokens list
-	if not isinstance(tokenstring, str):
+	if not isinstance(tokenstring, unicode):
 		return False
 
 	return True
@@ -109,14 +109,15 @@ def validateServerToken (tokenstring):
 def validateFieldAsIsoDateTimeNotation (datestring):
 	"""Validates the format of a generic string as campatible with the structure of an ISO 8601 datetime string. Values are not cheked
 
-	:param datestring: str
+	:param datestring: unicode
 	:return: bool
 	"""
 
+	#regex_string = r"[\+\-]{0,1}(\d{8}|\d{4}-\d{2}-\d{2})T\d{2}(:{0,1}\d{2}){0,2}(Z|([\+\-]{1}\d{2}(:{0,1}\d{2})))"
 	regex_string = r"[\+\-]{0,1}(\d{8}|\d{4}-\d{2}-\d{2})T\d{2}(:{0,1}\d{2}){0,2}(Z|([\+\-]{1}\d{2}(:{0,1}\d{2})))"
 
-	if isinstance(datestring, str):
-		return re.match(datestring, regex_string)
+	if isinstance(datestring, unicode):
+		return bool(re.match(regex_string, datestring))
 	else:
 		# wrong data type
 		return False
@@ -134,12 +135,30 @@ def validateFieldAsActiveUrl (fielddata):
 
 	#Testing if the URL actually exists
 	#TODO: verify if we need proxy settings and such to try this
-	conn = httplib.HTTPConnection(parsed.scheme+"://"+parsed.netloc)
-	conn.request('HEAD', parsed.path)
-	response = conn.getresponse()
-	conn.close()
-	if response.status != 200:
+
+	try:
+
+		if parsed.scheme == "http":
+			conn = httplib.HTTPConnection(parsed.netloc)
+		elif parsed.scheme == "https":
+			conn = httplib.HTTPSConnection(parsed.netloc)
+
+
+		conn.request('HEAD', parsed.path)
+		response = conn.getresponse()
+		conn.close()
+
+		#TODO: move answers_valid to constants
+		#TODO: decide the full range of acceptable answers from sites
+		answers_valid = (200, 302, 303)
+		if not response.status in answers_valid:
+			return False
+	except:
 		return False
+
+
+
+
 
 	#If all checks are passed
 	return True
@@ -165,7 +184,7 @@ def validateFieldAsTimeSpan (fielddata):
 def validateFieldAsBoundingBox (fielddata):
 	#Bounding box definition: array of 2*COORD_AXES_MODEL values (see constants) coordinates each as float values, direction S-N / W-E
 
-	#1. Checking if value is a collection of 2 arrays
+	#1. Checking if value is a collection of 2*COORD_AXES_MODEL values
 	if not (isinstance(fielddata, list) and len(fielddata)==2*COORD_AXES_MODEL):
 		return False
 
@@ -204,7 +223,7 @@ def validateFieldAsMetadataListing (fielddata):
 		if not metadata.has_key(FIELDNAME_METADATA_NAME):
 			#metadata must have a name
 			return False
-		elif not isinstance(metadata[FIELDNAME_METADATA_NAME], str):
+		elif not isinstance(metadata[FIELDNAME_METADATA_NAME], unicode):
 			#metadata name must be a string
 			return False
 		elif metadata[FIELDNAME_METADATA_NAME] in metadatanames:
@@ -230,7 +249,8 @@ def validateFieldAsDataIds (fielddata):
 
 def validateFieldAsAnomaly (fielddata):
 
-	if not validateDictToTemplate(fielddata, validation_templates.template_anomaly) and validateFieldAsBoundingBox(fielddata['BB']):
+	if not (validateDictToTemplate(fielddata, validation_templates.template_anomaly) and validateFieldAsBoundingBox(fielddata['BB'])):
 		return False
 
 	return True
+

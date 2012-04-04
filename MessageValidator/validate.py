@@ -19,9 +19,19 @@ def validateDictToTemplate (candidate, template):
 	:return: boolean
 	"""
 
-	#STEP 1: check if we have the same number of key/value couples at the current level
-	if not (isinstance(candidate, dict) and candidate.keys() == template.keys()):
+	#STEP 1: check if we have the same key/value couples at the current level
+	if not isinstance(candidate, dict):
 		return False
+	else:
+		keys_candidate = candidate.keys()
+		keys_candidate.sort()
+		keys_template = template.keys()
+		keys_template.sort()
+
+		if keys_candidate != keys_template:
+			return False
+
+
 
 
 	#STEP 2: validate the values of each key/value couple according to granularity in the template
@@ -31,7 +41,7 @@ def validateDictToTemplate (candidate, template):
 
 		if isinstance (constraint, list):
 			#2.1: validate against values range
-			if candidate[key] in constraint:
+			if not candidate[key] in constraint:
 				return False
 		elif isinstance(constraint, type):
 			#2.2: validate against type
@@ -58,9 +68,16 @@ def validateDictToTemplateAndLog (candidate, template, sequence="/"):
 	validation_errors = []
 
 	#STEP 1: check if we have the same number of key/value couples at the current level
+
 	try:
-		if candidate.keys() != template.keys():
+		keys_candidate = candidate.keys()
+		keys_candidate.sort()
+		keys_template = template.keys()
+		keys_template.sort()
+
+		if keys_candidate != keys_template:
 			return False, [ERROR_FIELDS_MISMATCH % sequence,]
+
 	except:
 		return False, [ERROR_NO_DICT % sequence,]
 
@@ -80,9 +97,9 @@ def validateDictToTemplateAndLog (candidate, template, sequence="/"):
 				validation_errors.append(ERROR_VALUE_WRONG_TYPE % (currentpath, type(candidate[key]), constraint))
 		elif isinstance(constraint, dict):
 			#2.3: recurse and check level below
-			next_level_validation = validateDictToTemplateAndLog (candidate[key], template[key], currentpath)
+			next_level_validation, report = validateDictToTemplateAndLog (candidate[key], template[key], currentpath)
 			if next_level_validation is not True:
-				validation_errors = validation_errors + next_level_validation[1]
+				validation_errors = validation_errors + report
 
 	if len(validation_errors) > 0:
 		return False, validation_errors
@@ -92,7 +109,7 @@ def validateDictToTemplateAndLog (candidate, template, sequence="/"):
 def parseJsonMessage (jsonmessage):
 	"""
 	Validates and parses a json message into a Python dict
-	:param jsonmessage: str, stringified json message
+	:param jsonmessage: unicode, stringified json message
 	:return: dict
 	"""
 

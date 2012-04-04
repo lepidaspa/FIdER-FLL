@@ -253,14 +253,14 @@ def validateFieldAsCrs (fielddata):
 	crsproperties = fielddata[FIELDNAME_GEOJSON_CRS_PROPERTIES]
 
 	if fielddata[FIELDNAME_GEOJSON_CRS_TYPE] == FIELDVALUE_GEOJSON_CRS_TYPE_LINKED:
-		#if crs is of type linked, check that it has both str fields Type and Href
-		if not (crsproperties.has_key(FIELDNAME_GEOJSON_CRS_LINKED_LINK) and isinstance(crsproperties[FIELDNAME_GEOJSON_CRS_LINKED_LINK], str)):
+		#if crs is of type linked, check that it has both unicode fields Type and Href
+		if not (crsproperties.has_key(FIELDNAME_GEOJSON_CRS_LINKED_LINK) and isinstance(crsproperties[FIELDNAME_GEOJSON_CRS_LINKED_LINK], unicode)):
 			return False
-		if not (crsproperties.has_key(FIELDNAME_GEOJSON_CRS_LINKED_TYPE) and isinstance(crsproperties[FIELDNAME_GEOJSON_CRS_LINKED_TYPE], str)):
+		if not (crsproperties.has_key(FIELDNAME_GEOJSON_CRS_LINKED_TYPE) and isinstance(crsproperties[FIELDNAME_GEOJSON_CRS_LINKED_TYPE], unicode)):
 			return False
 	elif fielddata[FIELDNAME_GEOJSON_CRS_TYPE] == FIELDVALUE_GEOJSON_CRS_TYPE_NAMED:
-		#if crs is of type named, check that it has the str field Name
-		if not (crsproperties.has_key(FIELDNAME_GEOJSON_CRS_NAMED_NAME) and isinstance(crsproperties[FIELDNAME_GEOJSON_CRS_NAMED_NAME], str)):
+		#if crs is of type named, check that it has the unicode field Name
+		if not (crsproperties.has_key(FIELDNAME_GEOJSON_CRS_NAMED_NAME) and isinstance(crsproperties[FIELDNAME_GEOJSON_CRS_NAMED_NAME], unicode)):
 			return False
 	else:
 		#type of crs not recognized
