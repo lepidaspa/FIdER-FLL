@@ -43,8 +43,8 @@ FIELDNAME_GEOJSON_COLLECTIONS_FEATURE = 'feature'
 FIELDNAME_GEOJSON_COLLECTIONS_PROPERTIES = 'properties'
 
 
-TYPES_GEOJSON_ALL = ( "Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon", "GeometryCollection", "Feature", "FeatureCollection" )
-TYPES_GEOJSON_GEOMETRY = ("Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon")
+TYPES_GEOJSON_ALL = [ "Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon", "GeometryCollection", "Feature", "FeatureCollection" ]
+TYPES_GEOJSON_GEOMETRY = ["Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon"]
 
 
 #The number of axes we use as coordinates for each point on the map
@@ -53,5 +53,5 @@ TYPES_GEOJSON_GEOMETRY = ("Point", "MultiPoint", "LineString", "MultiLineString"
 #The validation code will provide no fallback in case the data do not respect these settings
 
 #TODO: consider moving to configuration file (though should NEVER be changed once the application is installed)?
-COORD_AXES_MODEL = 3
+COORD_AXES_MODEL = 2
 COORD_AXES_COMPARE = 2

@@ -23,7 +23,7 @@ ERROR_GEOJSON_BBOX_INVALID = "Non valid bounding box: %s"
 ERROR_GEOJSON_BBOX_CONFLICT = "Bounding box conflict: %s not inside %s"
 ERROR_GEOJSON_INVALID_COLLECTION = "Non valid JSON %s collection object"
 ERROR_GEOJSON_INVALID_CRS = "Non valid CRS field: %s"
-
+ERROR_GEOJSON_CRS_OVERRIDE = "CRS field must be on the top-level object"
 
 
 ERROR_INVALID_ANOMALY = "Invalid anomaly description: %s"

@@ -26,8 +26,8 @@ def convertToPointBasedBoundingBox (bbox):
 	pbb = [[],[]]
 
 	for i in range (0, COORD_AXES_MODEL):
-		pbb[0][i] = bbox[i]
-		pbb[1][i] = bbox[COORD_AXES_MODEL+i]
+		pbb[0].append(bbox[i])
+		pbb[1].append(bbox[COORD_AXES_MODEL+i])
 
 	return pbb
 
@@ -36,7 +36,7 @@ def validatePointAsValidPosition (coordinates, bbox=None):
 
 	#we validate the coordinates as properly formed (with the number of axes specified as data model, COORD_AXES_MODEL) but we compare it to the bounding box with the number of axes relevant to the bounding box model (COORD_AXES_BBOX)
 
-	if not (isinstance(coordinates, list) and len(coordinates)==COORD_AXES_MODEL):
+	if not ((isinstance(coordinates, list) and len(coordinates)==COORD_AXES_MODEL)):
 		return False
 
 	for item in coordinates:
@@ -112,14 +112,17 @@ def validateFieldAsGJLinearRing (fielddata, bbox=None):
 
 	#Must be a valid line string
 	if not (validateFieldAsGJLineString(fielddata, bbox)):
+		#print "DEBUG: LinearRing %s is not a valid LineString" % fielddata
 		return False
 
 	#Must have at least 4 points
 	if len(fielddata) < 4:
+		#print "DEBUG: LinearRing %s has less than 4 points" % fielddata
 		return False
 
 	#The first and the last point must be the same
 	if fielddata[0] != fielddata[-1]:
+		#print "DEBUG: LinearRing %s end not in the same point as the start" % fielddata
 		return False
 
 	return True
@@ -133,28 +136,24 @@ def validateFieldAsGJPolygon (fielddata, bbox=None):
 	# Polygon should be made of LinearRings, all contained in the bbox
 	for linearring in fielddata:
 		if not validateFieldAsGJLinearRing(linearring, bbox):
+			print "DEBUG: error in LinearRing validation for polygon: %s with bbox %s" % (linearring, bbox)
 			return False
 
 	#NOTE: the validation of the inner linearrings does NOT follow the GeoJSON specifications. We are not checking that the linearrings are consistently concentric but only that no point is out of the initial linearring. This since some tools create polygons with non-concentric inner holes and notate them as GeoJSON polygons. For display purpose, the maps will simply ignore the inner rings and use the first ring as bounds of the area.
 	if len(fielddata)>1:
 		for i in range (1, len(fielddata)):
 			if not containsLinearRing (fielddata[0], fielddata[i]):
+				print "DEBUG: LinearRing %s does not contain %s" % (fielddata[0], fielddata[1])
+
 				return False
 
 	return True
 
-def containsLinearRing (external, internal):
-	#Checks if the internal linearring is contained in the external linearring, both having already been validated. Returns false if ANY point of internal is outside external, returns true if all points are inside or on the perimeter or on vertex (see containsPoint). CHECKED on *2D* only
 
-	for position in internal:
-		if not containsPoint (external, position):
-			return False
-
-	return True
 
 def containsPoint (linearring, point):
 	"""
-	Checks if the linearring contains the point. CONTAINS is valid if the point is inside, on a vertex or on the perimeter of linearring.
+	Checks if the linearring contains the point. CONTAINS is valid if the point is inside, on a vertex or on the perimeter of linearring. COmparison is made IN 2D ONLY.
 	"""
 
 	#quick check: if the point is in the same spot as a vertex we consider it inside
@@ -169,22 +168,37 @@ def containsPoint (linearring, point):
 	b = ending point of the segment
 	"""
 
+	#the point is outside until we make the ray pass through at leat ONE line
 	isinside = False
 
 	# skipping point 0 as 0 and -1 are the same so cannot create the segment properly
 	for i in range (1, len(linearring)):
 
-		Xa = linearring[i-1][0]
-		Ya = linearring[i-1][1]
-
-		Xb = linearring[i][0]
-		Yb = linearring[i][1]
+		startX = linearring[i-1][0]
+		startY = linearring[i-1][1]
+		endX = linearring[i][0]
+		endY = linearring[i][1]
 
 		Xo = point[0]
 		Yo = point[1]
 
+		if startX <= endX:
+			Xa = startX
+			Ya = startY
+
+			Xb = endX
+			Yb = endY
+
+		else:
+			Xa = endX
+			Ya = endY
+
+			Xb = startX
+			Yb = startY
+
 		# skip this segment if it cannot possibly pass through the point
-		if not Xa <= Xo <= Xb:
+		if not (Xa <= Xo <= Xb):
+			#print "DEBUG: skipping %s,%s to %s,%s" % (Xa,Ya, Xb, Yb)
 			continue
 
 		#1. normalization: point a becomes the cartesian origin
@@ -212,7 +226,17 @@ def containsPoint (linearring, point):
 			#if the point is ON the segment we consider it inside
 			return True
 
+	#print "DEBUG: %s inside %s %s" % (point, linearring, isinside)
 	return isinside
+
+def containsLinearRing (external, internal):
+	#Checks if the internal linearring is contained in the external linearring, both having already been validated. Returns false if ANY point of internal is outside external, returns true if all points are inside or on the perimeter or on vertex (see containsPoint). CHECKED on *2D* only
+
+	for position in internal:
+		if not containsPoint (external, position):
+			return False
+
+	return True
 
 
 def validateFieldAsGJMultiPolygon (fielddata, bbox=None):
@@ -224,6 +248,7 @@ def validateFieldAsGJMultiPolygon (fielddata, bbox=None):
 
 	for polygon in fielddata:
 		if not validateFieldAsGJPolygon(polygon, bbox):
+			#print "DEBUG: Polygon validation error on %s (bbox %s)" % (polygon, bbox)
 			return False
 
 	return True
@@ -236,7 +261,7 @@ def validateFieldAsGJGeometryCollection (fielddata, bbox=None):
 		return False
 
 	for object in fielddata:
-		if not (validateGeoJsonObject(object, bbox)):
+		if not (validateGeoJsonObject(object, bbox, sequence=1)):
 			return False
 
 	return True
@@ -247,7 +272,7 @@ def validateFieldAsCrs (fielddata):
 	# does not actually check if the CRS is correct, only that the information
 	# is structured properly (fields, etc)
 
-	if not (isinstance(fielddata, dict) and fielddata.has_key(FIELDNAME_GEOJSON_CRS_TYPE) and fielddata.has_key(FIELDNAME_GEOJSON_CRS_PROPERTIES)):
+	if not ((isinstance(fielddata, dict) and fielddata.has_key(FIELDNAME_GEOJSON_CRS_TYPE) and fielddata.has_key(FIELDNAME_GEOJSON_CRS_PROPERTIES))):
 		return False
 
 	crsproperties = fielddata[FIELDNAME_GEOJSON_CRS_PROPERTIES]
@@ -280,7 +305,7 @@ def validateMessageAsGeoJson (jsonmessage):
 
 	return validateGeoJsonObject (jsondata)
 
-def validateGeoJsonObject (jsondata, bbox=None, sequence="/"):
+def validateGeoJsonObject (jsondata, bbox=None, sequence=0):
 	"""
 	This function validates a json object as GeoJSON data according to: http://geojson.org/geojson-spec.html
 	NOTE: the bbox parameter is only available so that it a bounding box from a container object can be passed to a contained object. As such, it is validated and transformed in a [[coordinates0][coordinates1]] format at step 1.2.1 of the function. It can be passed by hand, but will not be validated or checked for errors; the only validation that is  done is, again at step 1.2.1, by checking that the sub-bbox is inside the container bbox.
@@ -288,7 +313,7 @@ def validateGeoJsonObject (jsondata, bbox=None, sequence="/"):
 	:param jsondata:
 	:param bbox:
 	:param sequence:
-	:return:
+	:return: bool, object (True/False validation, error message/json dict)
 	"""
 
 
@@ -309,10 +334,11 @@ def validateGeoJsonObject (jsondata, bbox=None, sequence="/"):
 		if validateFieldAsBoundingBox(jsondata[FIELDNAME_GEOJSON_BBOX]):
 			# for cleaner handling by the validation functions, the program converts a [x0, y0, x1, y1] bbox to the format [[x0, y0],[x1, y1]]
 			localbbox = convertToPointBasedBoundingBox(jsondata[FIELDNAME_GEOJSON_BBOX])
-			# Checking that the new bounding box is contained or equal to the given bounding box
-			for axis in range (0, COORD_AXES_COMPARE):
-				if localbbox[0][axis] < bbox[0][axis] or localbbox[1][axis] > bbox[1][axis]:
-					return False, ERROR_GEOJSON_BBOX_CONFLICT % (localbbox, bbox)
+			# Checking that the new bounding box is contained or equal to the given bounding box, IF there is a given bounding box
+			if bbox is not None:
+				for axis in range (0, COORD_AXES_COMPARE):
+					if localbbox[0][axis] < bbox[0][axis] or localbbox[1][axis] > bbox[1][axis]:
+						return False, ERROR_GEOJSON_BBOX_CONFLICT % (localbbox, bbox)
 			bbox = localbbox
 
 		else:
@@ -320,8 +346,11 @@ def validateGeoJsonObject (jsondata, bbox=None, sequence="/"):
 
 
 	#1.2.2 validating crs (optional field)
+	#UGLY HACK: we are using the value of sequence to know if we are dealing with a topmost object (sequence == 0) or lower (sequence == 1). Note that outside of this use the sequence value may not always be reliable
 	if jsondata.has_key(FIELDNAME_GEOJSON_CRS):
-		if not (validateFieldAsCrs(jsondata[FIELDNAME_GEOJSON_CRS])):
+		if sequence != 0:
+			return False, ERROR_GEOJSON_CRS_OVERRIDE
+		if not (validateFieldAsCrs(jsondata[FIELDNAME_GEOJSON_CRS]) or jsondata[FIELDNAME_GEOJSON_CRS] is None):
 			return False, ERROR_GEOJSON_INVALID_CRS % jsondata[FIELDNAME_GEOJSON_CRS]
 
 
@@ -358,13 +387,13 @@ def validateGeoJsonObject (jsondata, bbox=None, sequence="/"):
 			return False, ERROR_GEOJSON_INVALID_COLLECTION % "Feature"
 		#Geometry field must contain a GeoJSON geometry object OR a null (None in python) value
 		elif not jsondata[FIELDNAME_GEOJSON_COLLECTIONS_GEOMETRY] is None:
-			if not (jsondata[FIELDNAME_GEOJSON_COLLECTIONS_GEOMETRY].has_key(FIELDNAME_GEOJSON_OBJECTTYPE) and jsondata[FIELDNAME_GEOJSON_COLLECTIONS_GEOMETRY][FIELDNAME_GEOJSON_OBJECTTYPE] in TYPES_GEOJSON_GEOMETRY):
+			if not (jsondata[FIELDNAME_GEOJSON_COLLECTIONS_GEOMETRY].has_key(FIELDNAME_GEOJSON_OBJECTTYPE) and jsondata[FIELDNAME_GEOJSON_COLLECTIONS_GEOMETRY][FIELDNAME_GEOJSON_OBJECTTYPE] in TYPES_GEOJSON_GEOMETRY+["GeometryCollection",]):
 				return False, ERROR_GEOJSON_INVALID_COLLECTION % "Feature"
 
 			#We validate the internal object/s
-			validated, validationdata = validateGeoJsonObject(jsondata[FIELDNAME_GEOJSON_COLLECTIONS_GEOMETRY], bbox)
+			validated, validationdata = validateGeoJsonObject(jsondata[FIELDNAME_GEOJSON_COLLECTIONS_GEOMETRY], bbox, sequence=sequence+1)
 			if not validated:
-				return False, ERROR_GEOJSON_SUBVALIDATION % (validationdata)
+				return False, ERROR_GEOJSON_SUBVALIDATION % validationdata
 
 		#Feature object must contain a properties key
 		if not (jsondata.has_key(FIELDNAME_GEOJSON_COLLECTIONS_PROPERTIES)):
@@ -381,13 +410,11 @@ def validateGeoJsonObject (jsondata, bbox=None, sequence="/"):
 			return False, ERROR_GEOJSON_INVALID_COLLECTION % "FeatureCollection"
 		else:
 			for feature in jsondata[FIELDNAME_GEOJSON_COLLECTIONS_FEATURES]:
-				validated, validationdata = validateGeoJsonObject(feature, bbox)
+				validated, validationdata = validateGeoJsonObject(feature, bbox, sequence=sequence+1)
 				if not validated:
 					return False, ERROR_GEOJSON_SUBVALIDATION % (validationdata)
 
 
-	#TODO: add real breadcrumb support through sequence (wishful thinking)
-
 
 	# All checks passed
-	return True
+	return True, jsondata

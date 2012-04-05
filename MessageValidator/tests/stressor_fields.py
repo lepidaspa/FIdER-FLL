@@ -28,13 +28,23 @@ def runTest (function, candidates=None, expected=True):
 		# expected is a non nested list/tuple or a single value
 		# single values are compared directly or by type if describing a type
 
+	success = True
+
+	try:
 		if isinstance(expected, (list, tuple)):
 			for i in range (0, len(expected)):
 				assert compareResults (expected[i], result[i]) == True, ASSERT_ERROR_MSG % (function.__name__, candidate, expected[i], result[i])
 		else:
 			assert compareResults (expected, result) == True, ASSERT_ERROR_MSG % (function.__name__, candidate, expected, result)
+	except AssertionError as failed:
+
+		print "Failed test: "+str(failed.message)
+		print "Function output: "+str(result)
+		success = False
+
 
 	print "Testing %s for %s: completed" % (function.__name__, expected)
+	return success
 
 
 
