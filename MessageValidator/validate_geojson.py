@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from MessageValidator import parseJsonMessage
 
 __author__ = 'Antonio Vaccarino'
 __docformat__ = 'restructuredtext en'
@@ -7,8 +8,6 @@ __docformat__ = 'restructuredtext en'
 from constants import *
 from errors_msg import *
 from validate_fields import validateFieldAsBoundingBox
-from validate import parseJsonMessage
-
 
 def isBetween (value, limit_a, limit_b):
 

@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from validate import validateDictToTemplate
-import validation_templates
+import MessageTemplates
+from MessageValidator import validateDictToTemplate
+import validate_geojson
+
 
 __author__ = 'Antonio Vaccarino'
 __docformat__ = 'restructuredtext en'
@@ -11,9 +13,7 @@ import re
 import urlparse
 import datetime
 
-
 from constants import *
-
 
 def validateFieldAsIsoDateTime (isostring):
 	"""
@@ -158,8 +158,6 @@ def validateFieldAsActiveUrl (fielddata):
 
 
 
-
-
 	#If all checks are passed
 	return True
 
@@ -181,6 +179,8 @@ def validateFieldAsTimeSpan (fielddata):
 
 	return True
 
+
+
 def validateFieldAsBoundingBox (fielddata):
 	#Bounding box definition: array of 2*COORD_AXES_MODEL values (see constants) coordinates each as float values, direction S-N / W-E
 
@@ -201,6 +201,24 @@ def validateFieldAsBoundingBox (fielddata):
 
 	#All checks passed
 	return True
+
+def validateFieldAsGJListing (fielddata):
+	"""
+	Validates the field as a list of geojson objects
+	:param fielddata:
+	:return: bool
+	"""
+
+	if not isinstance (fielddata, (list, tuple)):
+		return False
+
+	for element in fielddata:
+		if not validate_geojson.validateGeoJsonObject(element):
+			return False
+
+	return True
+
+
 
 
 
@@ -244,13 +262,9 @@ def validateFieldAsMetadataListing (fielddata):
 
 def validateFieldAsDataIds (fielddata):
 	#This function verifies if the data provided by the field is realistic as a series of ID for our database
-	#TODO: check if IDs are numeric only or alphanumeric and implement
-	return True
+	#TODO: check if IDs are numeric only or alphanumeric and implement?
+	return isinstance(fielddata, str)
 
 def validateFieldAsAnomaly (fielddata):
 
-	if not (validateDictToTemplate(fielddata, validation_templates.template_anomaly) and validateFieldAsBoundingBox(fielddata['BB'])):
-		return False
-
-	return True
-
+	return validateDictToTemplate(fielddata, MessageTemplates.model_field_anomaly, MessageTemplates.process_field_anomaly, withlog=False)
