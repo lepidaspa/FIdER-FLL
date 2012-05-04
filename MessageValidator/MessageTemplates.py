@@ -64,14 +64,16 @@ model_response_read = {
 	"message_format": (u'read',),
 	"operation": (u'full', u'diff', u'none'),
 	"data": {
-		"upsert": list,
+		"upsert": dict,
 		"delete": list
 	}
 }
 
 #TODO: verify the specific subset of geojson objects that we need to use for this
+
+#removed temporarily since now we don't have a list but a dict of lists
+#	((["data", "upsert"],),((validateFieldIteratively,True, validateGeoJsonObject, None),)),
 process_response_read = (
-	((["data", "upsert"],),((validateFieldIteratively,True, validateGeoJsonObject, None),)),
 	((["data", "delete"],),((validateFieldAsListOf,True,(str, unicode),None),))
 )
 
@@ -79,16 +81,19 @@ process_response_read = (
 model_request_write = {
 	"token": unicode,
 	"message_type": [u'request',],
-	"message_format": [u'write,'],
+	"message_format": [u'write',],
 	"data": {
-		"upsert": list,
+		"upsert": dict,
 		"delete": list
 	}
 }
 
 # NOTE: same as process_response_read, but cloned in case the two branch out in the future
+#TODO: verify the specific subset of geojson objects that we need to use for this
+
+#removed temporarily since now we don't have a list but a dict of lists
+#	((["data", "upsert"],),((validateFieldIteratively,True, validateGeoJsonObject, None),)),
 process_request_write = (
-	((["data", "upsert"],),((validateFieldIteratively,True, validateGeoJsonObject, None),)),
 	((["data", "delete"],),((validateFieldAsListOf,True,(str, unicode),None),))
 )
 
@@ -96,7 +101,7 @@ process_request_write = (
 model_request_query = {
 	"token": unicode,
 	"message_type": [u'request',],
-	"message_format": [u'query,'],
+	"message_format": [u'query',],
 	"query" : {
 		"BB": list,
 		"inventory": dict,
@@ -159,7 +164,7 @@ model_error_error = {
 model_request_api = {
 	"token": unicode,
 	"message_type": [u'request',],
-	"message_format": [u'query,'],
+	"message_format": [u'query',],
 	"query" : {
 		"BB": list,
 		"time": unicode,
